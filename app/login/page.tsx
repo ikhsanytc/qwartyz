@@ -1,44 +1,63 @@
+"use client";
 import Container from "@/components/container";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import Link from "next/link";
-import { Eye } from "lucide-react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { checkLogin, supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { LoginT } from "@/types/main";
+import CardLogin from "@/components/Login/Card";
+import { useEffect } from "react";
 
 function Page() {
+  const { toast } = useToast();
+  const router = useRouter();
+  useEffect(() => {
+    checkLogin().then((val) => (val ? router.push("/") : ""));
+  }, []);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<LoginT>();
+  const login: SubmitHandler<LoginT> = async ({ email, password }) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      toast({
+        title: "Error while login",
+        description: error.message,
+        variant: "destructive",
+      });
+      if (error.status === 400) {
+        setError("email", {
+          type: "manual",
+          message: "Email or password is not valid!",
+        });
+        setError("password", {
+          type: "manual",
+          message: "Email or password is not valid!",
+        });
+      }
+      return;
+    }
+    toast({
+      title: "Success",
+      description: "Welcome to qwartyz",
+    });
+    router.push("/");
+  };
+
   return (
     <Container center>
-      <Card className="w-full md:w-1/2">
-        <CardHeader>
-          <CardTitle className="text-center">Login</CardTitle>
-        </CardHeader>
-        <Separator className="mb-5" />
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <Input placeholder="Email..." />
-            <div className="flex gap-2">
-              <Input placeholder="Password..." type="password" />
-              <Button size="icon">
-                <Eye />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-        <Separator className="mb-5" />
-        <CardFooter className="flex justify-between">
-          <Button>Login</Button>
-          <Button variant="secondary" asChild>
-            <Link href="/register">Register</Link>
-          </Button>
-        </CardFooter>
-      </Card>
+      <CardLogin
+        errors={errors}
+        register={register}
+        handleSubmit={handleSubmit}
+        login={login}
+      />
     </Container>
   );
 }

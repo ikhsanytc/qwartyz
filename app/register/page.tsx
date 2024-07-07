@@ -1,46 +1,74 @@
+"use client";
 import Container from "@/components/container";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Eye } from "lucide-react";
-import Link from "next/link";
+import CardRegister from "@/components/Register/Card";
+import { useToast } from "@/components/ui/use-toast";
+import { checkLogin, supabase, supabaseAdmin } from "@/lib/supabase";
+import { RegisterT } from "@/types/main";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
 
 function Page() {
+  const { toast } = useToast();
+  const router = useRouter();
+  useEffect(() => {
+    checkLogin().then((val) => (val ? router.push("/") : ""));
+  }, []);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<RegisterT>();
+  const registerProcess: SubmitHandler<RegisterT> = async (dataForm) => {
+    const { error, data } = await supabase.auth.signUp({
+      email: dataForm.email,
+      password: dataForm.password,
+    });
+    if (error) {
+      toast({
+        title: "Error while register!",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    const request = await supabase.from("user").insert({
+      username: dataForm.username,
+      email: dataForm.email,
+      userId: data.user?.id,
+      img: "nophoto.png",
+      description: "Hey i'm using qwartyz!",
+    });
+    if (request.error) {
+      toast({
+        title: "Error while register!",
+        description: request.error.message,
+        variant: "destructive",
+      });
+      await supabaseAdmin.auth.admin.deleteUser(data.user?.id!);
+      if (request.status === 409) {
+        setError("username", {
+          type: "manual",
+          message: "Username already used",
+        });
+      }
+      return;
+    }
+    toast({
+      title: "Success",
+      description: "Check you're email to validation!",
+    });
+    router.push("/login");
+  };
   return (
     <Container center>
-      <Card className="w-full md:w-1/2">
-        <CardHeader>
-          <CardTitle className="text-center">Register</CardTitle>
-        </CardHeader>
-        <Separator className="mb-5" />
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <Input placeholder="Email..." />
-            <div className="flex gap-2">
-              <Input placeholder="Password..." type="password" />
-              <Button size="icon">
-                <Eye />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-        <Separator className="mb-5" />
-        <CardFooter className="flex justify-between">
-          <Button>Register</Button>
-          <div>
-            <Button variant="secondary" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+      <CardRegister
+        register={register}
+        handleSubmit={handleSubmit}
+        errors={errors}
+        registerProcess={registerProcess}
+      />
     </Container>
   );
 }

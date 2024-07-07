@@ -10,7 +10,7 @@ const Message: FC<Props> = ({ children, posisi }) => {
     return (
       <>
         <div className="bg-slate-600 w-1/2 p-2 rounded-lg ml-auto">
-          <p>{children}</p>
+          <p dangerouslySetInnerHTML={{ __html: children }}></p>
         </div>
       </>
     );
@@ -18,7 +18,7 @@ const Message: FC<Props> = ({ children, posisi }) => {
   return (
     <>
       <div className="dark:bg-blue-600 bg-yellow-500 w-1/2 p-2 rounded-lg">
-        <p>{children}</p>
+        <p dangerouslySetInnerHTML={{ __html: children }}></p>
       </div>
     </>
   );
