@@ -33,7 +33,7 @@ function Navbar() {
   }
   return (
     <>
-      <nav className="top-0 fixed inset-x-0 dark:bg-gray-900 shadow w-full z-40 bg-white dark:text-white">
+      <nav className="top-0 fixed inset-x-0 dark:bg-gray-900 shadow w-full z-50 bg-white dark:text-white">
         <div className="h-16 flex justify-between items-center p-3">
           <Link className="text-2xl font-bold" href="/">
             QWARTYZ

@@ -1,12 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useReducer, useRef, Reducer } from "react";
-import { isMobile } from "react-device-detect";
+import { isDesktop, isMobile } from "react-device-detect";
 import Container from "@/components/container";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { checkLogin, send, supabase } from "@/lib/supabase";
-import { ChatModel, UserModel } from "@/types/model";
+import { ChatModel, ContactModel, UserModel } from "@/types/model";
 import { State, Action } from "@/types/main";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import ChatBoxPhone from "@/components/Chat/ChatBox";
@@ -43,6 +43,7 @@ function Page({ params: { name } }: { params: { name: string } }) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { toast } = useToast();
   const userRef = useRef<UserModel | null>(null);
+  const msgRef = useRef(state.msg);
   const chatBoxRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -53,12 +54,25 @@ function Page({ params: { name } }: { params: { name: string } }) {
         router.push("/login");
         return;
       }
+      if (isDesktop) {
+        router.push("/home");
+        return;
+      }
       dispatch({ type: "SET_LOGIN", payload: true });
       const { data: userData } = await supabase
         .from("user")
         .select()
         .eq("email", user.email)
         .single();
+      if (userData.username === name) {
+        toast({
+          title: "Forbidden 403",
+          variant: "destructive",
+        });
+        router.push("/home");
+        // console.log("ya");
+        return;
+      }
       dispatch({ type: "SET_USER", payload: userData });
       const { data: contactData } = await supabase
         .from("Contact")
@@ -73,6 +87,10 @@ function Page({ params: { name } }: { params: { name: string } }) {
   useEffect(() => {
     userRef.current = state.user;
   }, [state.user]);
+
+  useEffect(() => {
+    msgRef.current = state.msg;
+  }, [state.msg]);
 
   useEffect(() => {
     const subscribe = supabase
@@ -92,7 +110,10 @@ function Page({ params: { name } }: { params: { name: string } }) {
   useEffect(() => {
     const loadMessages = async () => {
       dispatch({ type: "SET_MSG", payload: [] });
-      const { data: chatData } = await supabase.from("chat").select();
+      const { data: chatData } = await supabase
+        .from("chat")
+        .select()
+        .order("created_at", { ascending: true });
       chatData?.forEach((chat) => {
         if (
           (chat.target === name && chat.sender === userRef.current?.username) ||
@@ -157,6 +178,21 @@ function Page({ params: { name } }: { params: { name: string } }) {
             });
           }
         });
+      }
+    }
+    if (payload.eventType === "UPDATE") {
+      const updateMsg = payload.new;
+      const isChatMessage =
+        (updateMsg.sender === name &&
+          updateMsg.target === userRef.current?.username) ||
+        (updateMsg.target === name &&
+          updateMsg.sender === userRef.current?.username);
+      if (isChatMessage) {
+        const idMsg = msgRef.current.findIndex((msg) => msg.id == updateMsg.id);
+        if (idMsg === -1) return;
+        const msg = msgRef.current;
+        msg[idMsg].message = updateMsg.message;
+        dispatch({ type: "SET_MSG", payload: msg });
       }
     }
   };

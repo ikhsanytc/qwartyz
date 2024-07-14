@@ -1,7 +1,7 @@
 "use client";
 
 import { State } from "@/types/main";
-import { FC, FormEvent, RefObject } from "react";
+import { FC, FormEvent, KeyboardEvent, RefObject } from "react";
 import Message from "../ui/Message/message";
 import { Send } from "lucide-react";
 
@@ -13,6 +13,12 @@ interface Props {
 }
 
 const ChatBox: FC<Props> = ({ state, chatContainerRef, send, chatBoxRef }) => {
+  function handleKey(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send(e as unknown as FormEvent<HTMLFormElement>);
+    }
+  }
   return (
     <>
       <div className="dark:bg-slate-400 bg-slate-200 shadow md:flex hidden min-h-screen max-h-screen overflow-auto w-full rounded-lg flex-col">
@@ -25,9 +31,17 @@ const ChatBox: FC<Props> = ({ state, chatContainerRef, send, chatBoxRef }) => {
               className="p-2 flex gap-2 flex-col overflow-auto text-white flex-grow scroll-smooth"
               ref={chatContainerRef}
             >
+              <div className="w-1/2 md:text-sm p-2 mb-5 mx-auto text-center text-yellow-500 dark:text-blue-500 rounded-lg bg-slate-600 break-words">
+                <p>
+                  Your messages are end-to-end encrypted. no one can see the
+                  contents of your chat, not even qwartyz can read or understand
+                  the contents of your chat.
+                </p>
+              </div>
               {state.msg?.map((chat, idx) => (
                 <Message
                   key={idx}
+                  id={chat.id}
                   posisi={
                     chat.sender === state.user?.username ? "kamu" : "lawan"
                   }
@@ -41,6 +55,7 @@ const ChatBox: FC<Props> = ({ state, chatContainerRef, send, chatBoxRef }) => {
                 <div className="flex gap-2 items-center">
                   <textarea
                     ref={chatBoxRef}
+                    onKeyPress={handleKey}
                     placeholder="Message"
                     className="rounded-lg w-full bg-transparent outline-none border-2 border-gray-950 dark:border-slate-50 p-2"
                   ></textarea>

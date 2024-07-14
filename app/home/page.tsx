@@ -7,7 +7,7 @@ import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import Container from "@/components/container";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
-import { send, supabase } from "@/lib/supabase";
+import { decryptMessage, encryptMessage, send, supabase } from "@/lib/supabase";
 import ListContact from "@/components/Home/ListContact";
 import ChatBox from "@/components/Home/ChatBox";
 import { Separator } from "@/components/ui/separator";
@@ -46,6 +46,7 @@ function Page() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { toast } = useToast();
   const whoMsgRef = useRef(state.whoMsg);
+  const msgRef = useRef(state.msg);
   const userRef = useRef<UserModel | null>(state.user);
   const chatBoxRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -85,6 +86,10 @@ function Page() {
   }, [state.user]);
 
   useEffect(() => {
+    msgRef.current = state.msg;
+  }, [state.msg]);
+
+  useEffect(() => {
     const subscribe = supabase
       .channel("chat")
       .on(
@@ -103,7 +108,10 @@ function Page() {
     const fetchMessages = async () => {
       dispatch({ type: "SET_MSG", payload: [] });
 
-      const { data: chats } = await supabase.from("chat").select();
+      const { data: chats } = await supabase
+        .from("chat")
+        .select()
+        .order("created_at", { ascending: true });
       chats?.forEach((chat) => {
         if (
           (chat.target === whoMsgRef.current &&
@@ -122,57 +130,75 @@ function Page() {
   const onChangeRealtime = (
     payload: RealtimePostgresChangesPayload<ChatModel>
   ) => {
-    if (payload.eventType !== "INSERT") return;
+    if (payload.eventType === "INSERT") {
+      const newMsg = payload.new;
+      const isChatMessage =
+        (newMsg.sender === whoMsgRef.current &&
+          newMsg.target === userRef.current?.username) ||
+        (newMsg.target === whoMsgRef.current &&
+          newMsg.sender === userRef.current?.username);
 
-    const newMsg = payload.new;
-    const isChatMessage =
-      (newMsg.sender === whoMsgRef.current &&
-        newMsg.target === userRef.current?.username) ||
-      (newMsg.target === whoMsgRef.current &&
-        newMsg.sender === userRef.current?.username);
+      if (isChatMessage) dispatch({ type: "ADD_MSG", payload: newMsg });
 
-    if (isChatMessage) dispatch({ type: "ADD_MSG", payload: newMsg });
-
-    if (
-      newMsg.target === userRef.current?.username &&
-      whoMsgRef.current !== newMsg.sender
-    ) {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          const notification = new Notification(
-            `New Message From ${newMsg.sender}!`,
-            {
-              body: newMsg.message,
-            }
-          );
-          notification.onclick = function () {
-            window.focus();
-            if (isMobile) {
-              router.push(`/chat/${newMsg.sender}`);
-            } else {
-              dispatch({ type: "SET_WHO_MSG", payload: newMsg.sender });
-            }
-            notification.close();
-          };
-        } else if (permission === "denied") {
-          toast({
-            title: newMsg.sender,
-            description: newMsg.message,
-            action: (
-              <ToastAction
-                altText="Open chat"
-                onClick={() =>
-                  isMobile
-                    ? router.push(`/chat/${newMsg.sender}`)
-                    : dispatch({ type: "SET_WHO_MSG", payload: newMsg.sender })
-                }
-              >
-                Open chat
-              </ToastAction>
-            ),
-          });
-        }
-      });
+      if (
+        newMsg.target === userRef.current?.username &&
+        whoMsgRef.current !== newMsg.sender
+      ) {
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") {
+            const notification = new Notification(
+              `New Message From ${newMsg.sender}!`,
+              {
+                body: decryptMessage(newMsg.message),
+              }
+            );
+            notification.onclick = function () {
+              window.focus();
+              if (isMobile) {
+                router.push(`/chat/${newMsg.sender}`);
+              } else {
+                dispatch({ type: "SET_WHO_MSG", payload: newMsg.sender });
+              }
+              notification.close();
+            };
+          } else if (permission === "denied") {
+            toast({
+              title: newMsg.sender,
+              description: decryptMessage(newMsg.message),
+              action: (
+                <ToastAction
+                  altText="Open chat"
+                  onClick={() =>
+                    isMobile
+                      ? router.push(`/chat/${newMsg.sender}`)
+                      : dispatch({
+                          type: "SET_WHO_MSG",
+                          payload: newMsg.sender,
+                        })
+                  }
+                >
+                  Open chat
+                </ToastAction>
+              ),
+            });
+          }
+        });
+      }
+    }
+    if (payload.eventType === "UPDATE") {
+      const updateMsg = payload.new;
+      const isChatMessage =
+        (updateMsg.sender === whoMsgRef.current &&
+          updateMsg.target === userRef.current?.username) ||
+        (updateMsg.target === whoMsgRef.current &&
+          updateMsg.sender === userRef.current?.username);
+      if (isChatMessage) {
+        const idMsg = msgRef.current.findIndex((msg) => msg.id == updateMsg.id);
+        if (idMsg === -1) return;
+        const msg = msgRef.current;
+        msg[idMsg].message = updateMsg.message;
+        dispatch({ type: "SET_MSG", payload: msg });
+      }
     }
   };
 

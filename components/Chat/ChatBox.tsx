@@ -31,10 +31,18 @@ const ChatBoxPhone: FC<Props> = ({
 
         <div
           ref={chatContainerRef}
-          className="p-2 flex gap-2 flex-col text-white min-h-32 overflow-auto max-h-full scroll-smooth"
+          className="p-2 flex gap-2 flex-col text-white min-h-screen overflow-auto max-h-screen scroll-smooth"
         >
+          <div className="w-ful p-2 text-sm mb-5 mx-auto text-center text-yellow-500 dark:text-blue-500 rounded-lg bg-slate-600 break-words">
+            <p>
+              Your messages are end-to-end encrypted. no one can see the
+              contents of your chat, not even qwartyz can read or understand the
+              contents of your chat.
+            </p>
+          </div>
           {state.msg.map((message, idx) => (
             <Message
+              id={message.id}
               key={idx}
               posisi={
                 message.sender === state.user?.username ? "kamu" : "lawan"
@@ -43,14 +51,21 @@ const ChatBoxPhone: FC<Props> = ({
               {message.message}
             </Message>
           ))}
+          <div className="p-5"></div>
         </div>
       </div>
-      <div className="dark:bg-gray-800 bg-slate-100 w-full p-3 fixed bottom-0 inset-x-0">
+      <div className="dark:bg-gray-800 z-40 bg-slate-100 w-full p-3 fixed bottom-0 inset-x-0">
         <form onSubmit={send}>
           <div className="flex gap-2 items-center">
             <textarea
               ref={chatBoxRef}
               placeholder="Message..."
+              onFocus={() => {
+                if (chatContainerRef.current) {
+                  chatContainerRef.current.scrollTop =
+                    chatContainerRef.current.scrollHeight;
+                }
+              }}
               className="rounded-lg w-full bg-transparent outline-none border-2 dark:border-slate-50 border-gray-950 p-2"
             ></textarea>
             <button type="submit">
