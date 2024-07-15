@@ -1,5 +1,5 @@
 "use client";
-import { FC, ReactNode, useState } from "react";
+import { Dispatch, FC, ReactNode, SetStateAction, useState } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -30,9 +30,13 @@ interface Props {
   children: ReactNode;
   posisi: "lawan" | "kamu";
   id: number;
+  setReplyTo: Dispatch<
+    SetStateAction<{ message: string; sender: string } | null>
+  >;
+  name: string;
 }
 
-const Message: FC<Props> = ({ children, posisi, id }) => {
+const Message: FC<Props> = ({ children, posisi, id, setReplyTo, name }) => {
   const [editMsgBox, setEditMsgBox] = useState("");
   const { toast } = useToast();
   async function copy() {
@@ -72,7 +76,13 @@ const Message: FC<Props> = ({ children, posisi, id }) => {
                 posisi === "kamu"
                   ? "bg-slate-600 ml-auto"
                   : "bg-yellow-500 dark:bg-blue-500"
-              } break-words`}
+              } break-words cursor-pointer`}
+              onDoubleClick={() =>
+                setReplyTo({
+                  message: decryptMessage(children as string),
+                  sender: name,
+                })
+              }
             >
               <p
                 dangerouslySetInnerHTML={{
@@ -89,7 +99,16 @@ const Message: FC<Props> = ({ children, posisi, id }) => {
                 <div className="hidden"></div>
               )}
             </DialogTrigger>
-            <ContextMenuItem>Reply</ContextMenuItem>
+            <ContextMenuItem
+              onClick={() =>
+                setReplyTo({
+                  message: decryptMessage(children as string),
+                  sender: name,
+                })
+              }
+            >
+              Reply
+            </ContextMenuItem>
             <ContextMenuItem onClick={copy}>Copy</ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>

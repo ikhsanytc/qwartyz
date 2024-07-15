@@ -218,7 +218,8 @@ function Page() {
           <ChatBox
             chatBoxRef={chatBoxRef}
             chatContainerRef={chatContainerRef}
-            send={(e) => send(e, chatBoxRef, toast, state)}
+            send={send}
+            toast={toast}
             state={state}
           />
         </div>

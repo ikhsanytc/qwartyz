@@ -1,27 +1,62 @@
 "use client";
 
 import { State } from "@/types/main";
-import { FC, FormEvent, KeyboardEvent, RefObject } from "react";
+import {
+  FC,
+  FormEvent,
+  KeyboardEvent,
+  RefObject,
+  useEffect,
+  useState,
+} from "react";
 import Message from "../ui/Message/message";
 import { Send } from "lucide-react";
+import { Toast } from "../ui/use-toast";
 
 interface Props {
   state: State;
   chatContainerRef: RefObject<HTMLDivElement>;
-  send: (e: FormEvent<HTMLFormElement>) => Promise<void>;
+  send: (
+    e: FormEvent<HTMLFormElement>,
+    chatBoxRef: RefObject<HTMLTextAreaElement>,
+    toast: ({ ...props }: Toast) => void,
+    state: State
+  ) => Promise<void>;
+  toast: ({ ...props }: Toast) => void;
   chatBoxRef: RefObject<HTMLTextAreaElement>;
 }
 
-const ChatBox: FC<Props> = ({ state, chatContainerRef, send, chatBoxRef }) => {
+const ChatBox: FC<Props> = ({
+  state,
+  chatContainerRef,
+  send,
+  chatBoxRef,
+  toast,
+}) => {
+  const [replyTo, setReplyTo] = useState<{
+    message: string;
+    sender: string;
+  } | null>(null);
   function handleKey(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      send(e as unknown as FormEvent<HTMLFormElement>);
+      send(
+        e as unknown as FormEvent<HTMLFormElement>,
+        chatBoxRef,
+        toast,
+        state
+      );
     }
   }
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [replyTo]);
   return (
     <>
-      <div className="dark:bg-slate-400 bg-slate-200 shadow md:flex hidden min-h-screen max-h-screen overflow-auto w-full rounded-lg flex-col">
+      <div className="dark:bg-slate-400 bg-slate-200 shadow md:flex hidden min-h-screen max-h-screen w-full rounded-lg flex-col">
         {state.whoMsg ? (
           <>
             <div className="dark:bg-gray-800 bg-slate-100 w-full p-2 rounded-t-lg">
@@ -42,6 +77,8 @@ const ChatBox: FC<Props> = ({ state, chatContainerRef, send, chatBoxRef }) => {
                 <Message
                   key={idx}
                   id={chat.id}
+                  setReplyTo={setReplyTo}
+                  name={chat.sender}
                   posisi={
                     chat.sender === state.user?.username ? "kamu" : "lawan"
                   }
@@ -51,17 +88,38 @@ const ChatBox: FC<Props> = ({ state, chatContainerRef, send, chatBoxRef }) => {
               ))}
             </div>
             <div className="dark:bg-gray-800 bg-slate-100 w-full p-3 rounded-b-lg">
-              <form onSubmit={send}>
-                <div className="flex gap-2 items-center">
-                  <textarea
-                    ref={chatBoxRef}
-                    onKeyPress={handleKey}
-                    placeholder="Message"
-                    className="rounded-lg w-full bg-transparent outline-none border-2 border-gray-950 dark:border-slate-50 p-2"
-                  ></textarea>
-                  <button type="submit">
-                    <Send />
-                  </button>
+              <form onSubmit={(e) => send(e, chatBoxRef, toast, state)}>
+                <div className="flex gap-2 flex-col items-center">
+                  <div
+                    className={`transition-all duration-300 ${
+                      replyTo ? "w-full h-full" : "w-0 opacity-0 h-0"
+                    }`}
+                  >
+                    <div className="bg-gray-300 p-2 rounded-lg mb-2 w-full">
+                      <p className="text-sm text-gray-700">Replying to:</p>
+                      <p className="font-semibold text-gray-900">
+                        {replyTo?.sender} | {replyTo?.message}
+                      </p>
+                      <button
+                        type="button"
+                        className="text-xs text-red-500"
+                        onClick={() => setReplyTo(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                  <div className="w-full flex gap-2">
+                    <textarea
+                      ref={chatBoxRef}
+                      onKeyPress={handleKey}
+                      placeholder="Message"
+                      className="rounded-lg w-full bg-transparent outline-none border-2 border-gray-950 dark:border-slate-50 p-2"
+                    ></textarea>
+                    <button type="submit">
+                      <Send />
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>

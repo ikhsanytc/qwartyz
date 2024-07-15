@@ -213,7 +213,7 @@ function Page({ params: { name } }: { params: { name: string } }) {
         send={(e) => send(e, chatBoxRef, toast, state)}
         state={state}
       />
-      <div className="p-3"></div>
+      <div className="p-20"></div>
     </Container>
   );
 }
