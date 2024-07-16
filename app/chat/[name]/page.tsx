@@ -207,10 +207,13 @@ function Page({ params: { name } }: { params: { name: string } }) {
   return (
     <Container navbar>
       <ChatBoxPhone
+        toast={toast}
         chatBoxRef={chatBoxRef}
+        whoMsg={name}
+        userRef={userRef}
         chatContainerRef={chatContainerRef}
         name={name}
-        send={(e) => send(e, chatBoxRef, toast, state)}
+        send={send}
         state={state}
       />
       <div className="p-20"></div>

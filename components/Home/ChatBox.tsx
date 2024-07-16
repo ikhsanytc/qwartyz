@@ -5,6 +5,7 @@ import {
   FC,
   FormEvent,
   KeyboardEvent,
+  MutableRefObject,
   RefObject,
   useEffect,
   useState,
@@ -12,6 +13,8 @@ import {
 import Message from "../ui/Message/message";
 import { Send } from "lucide-react";
 import { Toast } from "../ui/use-toast";
+import { socket } from "@/lib/socket";
+import { UserModel } from "@/types/model";
 
 interface Props {
   state: State;
@@ -24,6 +27,8 @@ interface Props {
   ) => Promise<void>;
   toast: ({ ...props }: Toast) => void;
   chatBoxRef: RefObject<HTMLTextAreaElement>;
+  whoMsgRef: MutableRefObject<string>;
+  userRef: MutableRefObject<UserModel | null>;
 }
 
 const ChatBox: FC<Props> = ({
@@ -32,12 +37,16 @@ const ChatBox: FC<Props> = ({
   send,
   chatBoxRef,
   toast,
+  whoMsgRef,
+  userRef,
 }) => {
   const [replyTo, setReplyTo] = useState<{
     message: string;
     sender: string;
   } | null>(null);
+  const [typing, setTyping] = useState(false);
   function handleKey(e: KeyboardEvent<HTMLTextAreaElement>) {
+    socket.emit("typing", state.user?.username, state.whoMsg);
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send(
@@ -54,6 +63,18 @@ const ChatBox: FC<Props> = ({
         chatContainerRef.current.scrollHeight;
     }
   }, [replyTo]);
+  useEffect(() => {
+    socket.on("typingFromServer", (sender, target) => {
+      if (sender == whoMsgRef.current && target == userRef.current?.username) {
+        setTyping(true);
+      }
+    });
+    socket.on("blurTypeFromServer", (sender, target) => {
+      if (sender == whoMsgRef.current && target == userRef.current?.username) {
+        setTyping(false);
+      }
+    });
+  }, []);
   return (
     <>
       <div className="dark:bg-slate-400 bg-slate-200 shadow md:flex hidden min-h-screen max-h-screen w-full rounded-lg flex-col">
@@ -61,6 +82,7 @@ const ChatBox: FC<Props> = ({
           <>
             <div className="dark:bg-gray-800 bg-slate-100 w-full p-2 rounded-t-lg">
               <h1 className="font-semibold text-lg">{state.whoMsg}</h1>
+              {typing && <p className="text-sm text-green-500">typing...</p>}
             </div>
             <div
               className="p-2 flex gap-2 flex-col overflow-auto text-white flex-grow scroll-smooth"
@@ -113,6 +135,20 @@ const ChatBox: FC<Props> = ({
                     <textarea
                       ref={chatBoxRef}
                       onKeyPress={handleKey}
+                      onFocus={() => {
+                        socket.emit(
+                          "typing",
+                          state.user?.username,
+                          state.whoMsg
+                        );
+                      }}
+                      onBlur={() => {
+                        socket.emit(
+                          "blurType",
+                          state.user?.username,
+                          state.whoMsg
+                        );
+                      }}
                       placeholder="Message"
                       className="rounded-lg w-full bg-transparent outline-none border-2 border-gray-950 dark:border-slate-50 p-2"
                     ></textarea>

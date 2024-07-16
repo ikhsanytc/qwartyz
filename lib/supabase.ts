@@ -3,6 +3,7 @@ import { State } from "@/types/main";
 import { createClient } from "@supabase/supabase-js";
 import { RefObject, FormEvent } from "react";
 import CryptoJs from "crypto-js"
+import { socket } from "./socket";
 
 export const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL_PROJECT!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 export const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL_PROJECT!, process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY!)
@@ -65,6 +66,6 @@ export const send = async (e: FormEvent<HTMLFormElement>, chatBoxRef: RefObject<
       message: value,
       reply: null,
     });
-
+    socket.emit("blurType", state.user?.username, state.whoMsg)
     chatBoxRef.current.value = "";
 };

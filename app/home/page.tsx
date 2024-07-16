@@ -126,7 +126,21 @@ function Page() {
 
     fetchMessages();
   }, [state.whoMsg]);
-
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      navigator.serviceWorker
+        .register("/service-worker.js")
+        .then(function (registration) {
+          console.log(
+            "Service Worker registered with scope:",
+            registration.scope
+          );
+        })
+        .catch(function (error) {
+          console.error("Service Worker registration failed:", error);
+        });
+    }
+  }, []);
   const onChangeRealtime = (
     payload: RealtimePostgresChangesPayload<ChatModel>
   ) => {
@@ -146,21 +160,11 @@ function Page() {
       ) {
         Notification.requestPermission().then((permission) => {
           if (permission === "granted") {
-            const notification = new Notification(
-              `New Message From ${newMsg.sender}!`,
-              {
+            navigator.serviceWorker.ready.then((regis) => {
+              regis.showNotification(`Message From ${newMsg.sender}`, {
                 body: decryptMessage(newMsg.message),
-              }
-            );
-            notification.onclick = function () {
-              window.focus();
-              if (isMobile) {
-                router.push(`/chat/${newMsg.sender}`);
-              } else {
-                dispatch({ type: "SET_WHO_MSG", payload: newMsg.sender });
-              }
-              notification.close();
-            };
+              });
+            });
           } else if (permission === "denied") {
             toast({
               title: newMsg.sender,
@@ -216,6 +220,8 @@ function Page() {
           <ListContact dispatch={dispatch} state={state} />
           <Separator orientation="vertical" />
           <ChatBox
+            userRef={userRef}
+            whoMsgRef={whoMsgRef}
             chatBoxRef={chatBoxRef}
             chatContainerRef={chatContainerRef}
             send={send}

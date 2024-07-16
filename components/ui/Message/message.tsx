@@ -40,7 +40,7 @@ const Message: FC<Props> = ({ children, posisi, id, setReplyTo, name }) => {
   const [editMsgBox, setEditMsgBox] = useState("");
   const { toast } = useToast();
   async function copy() {
-    await navigator.clipboard.writeText(children as string);
+    await navigator.clipboard.writeText(decryptMessage(children as string));
     toast({
       title: "Success copy",
     });
