@@ -126,21 +126,7 @@ function Page() {
 
     fetchMessages();
   }, [state.whoMsg]);
-  useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      navigator.serviceWorker
-        .register("/service-worker.js")
-        .then(function (registration) {
-          console.log(
-            "Service Worker registered with scope:",
-            registration.scope
-          );
-        })
-        .catch(function (error) {
-          console.error("Service Worker registration failed:", error);
-        });
-    }
-  }, []);
+
   const onChangeRealtime = (
     payload: RealtimePostgresChangesPayload<ChatModel>
   ) => {
@@ -165,6 +151,27 @@ function Page() {
                 body: decryptMessage(newMsg.message),
               });
             });
+            if (isMobile) {
+              toast({
+                title: newMsg.sender,
+                description: decryptMessage(newMsg.message),
+                action: (
+                  <ToastAction
+                    altText="Open chat"
+                    onClick={() =>
+                      isMobile
+                        ? router.push(`/chat/${newMsg.sender}`)
+                        : dispatch({
+                            type: "SET_WHO_MSG",
+                            payload: newMsg.sender,
+                          })
+                    }
+                  >
+                    Open chat
+                  </ToastAction>
+                ),
+              });
+            }
           } else if (permission === "denied") {
             toast({
               title: newMsg.sender,

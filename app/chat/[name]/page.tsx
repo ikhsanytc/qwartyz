@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useReducer, useRef, Reducer } from "react";
+import { useEffect, useReducer, useRef, Reducer, useState } from "react";
 import { isDesktop, isMobile } from "react-device-detect";
 import Container from "@/components/container";
 import { useToast } from "@/components/ui/use-toast";
@@ -46,9 +46,11 @@ function Page({ params: { name } }: { params: { name: string } }) {
   const msgRef = useRef(state.msg);
   const chatBoxRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initialize = async () => {
+      setLoading(true);
       const user = await checkLogin();
       if (!user) {
         router.push("/login");
@@ -80,6 +82,7 @@ function Page({ params: { name } }: { params: { name: string } }) {
         .eq("userId", user.id);
       dispatch({ type: "SET_CONTACT", payload: contactData });
       dispatch({ type: "SET_WHO_MSG", payload: name });
+      setLoading(false);
     };
     initialize();
   }, [name, router]);
@@ -109,6 +112,7 @@ function Page({ params: { name } }: { params: { name: string } }) {
 
   useEffect(() => {
     const loadMessages = async () => {
+      setLoading(true);
       dispatch({ type: "SET_MSG", payload: [] });
       const { data: chatData } = await supabase
         .from("chat")
@@ -122,6 +126,7 @@ function Page({ params: { name } }: { params: { name: string } }) {
           dispatch({ type: "ADD_MSG", payload: chat });
         }
       });
+      setLoading(false);
     };
     loadMessages();
   }, [state.whoMsg, name]);
@@ -205,10 +210,11 @@ function Page({ params: { name } }: { params: { name: string } }) {
   }, [state.msg]);
 
   return (
-    <Container navbar>
+    <Container>
       <ChatBoxPhone
         toast={toast}
         chatBoxRef={chatBoxRef}
+        loading={loading}
         whoMsg={name}
         userRef={userRef}
         chatContainerRef={chatContainerRef}

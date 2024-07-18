@@ -25,6 +25,8 @@ import {
 } from "../dialog";
 import { Textarea } from "../textarea";
 import { Button } from "../button";
+import { isMobile } from "react-device-detect";
+import { timeStamp } from "@/lib/utils";
 
 interface Props {
   children: ReactNode;
@@ -34,9 +36,17 @@ interface Props {
     SetStateAction<{ message: string; sender: string } | null>
   >;
   name: string;
+  time: string;
 }
 
-const Message: FC<Props> = ({ children, posisi, id, setReplyTo, name }) => {
+const Message: FC<Props> = ({
+  children,
+  posisi,
+  id,
+  setReplyTo,
+  name,
+  time,
+}) => {
   const [editMsgBox, setEditMsgBox] = useState("");
   const { toast } = useToast();
   async function copy() {
@@ -72,11 +82,11 @@ const Message: FC<Props> = ({ children, posisi, id, setReplyTo, name }) => {
         <ContextMenu>
           <ContextMenuTrigger asChild>
             <div
-              className={`w-1/2 p-2 rounded-lg ${
+              className={`max-w-1/2 p-2 rounded-lg ${
                 posisi === "kamu"
                   ? "bg-slate-600 ml-auto"
-                  : "bg-yellow-500 dark:bg-blue-500"
-              } break-words cursor-pointer`}
+                  : "bg-yellow-500 dark:bg-blue-500 mr-auto"
+              } cursor-pointer ${isMobile && "text-sm"}`}
               onDoubleClick={() =>
                 setReplyTo({
                   message: decryptMessage(children as string),
@@ -84,11 +94,17 @@ const Message: FC<Props> = ({ children, posisi, id, setReplyTo, name }) => {
                 })
               }
             >
-              <p
-                dangerouslySetInnerHTML={{
-                  __html: decryptMessage(children as string),
-                }}
-              ></p>
+              <div className="flex gap-2 items-end">
+                <p
+                  dangerouslySetInnerHTML={{
+                    __html: decryptMessage(children as string),
+                  }}
+                  className="break-words"
+                ></p>
+                <p className="text-xs text-gray-400 text-end whitespace-nowrap flex-shrink-0">
+                  {timeStamp(time)}
+                </p>
+              </div>
             </div>
           </ContextMenuTrigger>
           <ContextMenuContent>

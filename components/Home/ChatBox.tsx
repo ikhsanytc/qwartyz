@@ -98,6 +98,7 @@ const ChatBox: FC<Props> = ({
               {state.msg?.map((chat, idx) => (
                 <Message
                   key={idx}
+                  time={chat.created_at}
                   id={chat.id}
                   setReplyTo={setReplyTo}
                   name={chat.sender}
