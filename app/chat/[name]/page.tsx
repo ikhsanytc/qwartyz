@@ -45,7 +45,6 @@ function Page({ params: { name } }: { params: { name: string } }) {
   const userRef = useRef<UserModel | null>(null);
   const msgRef = useRef(state.msg);
   const chatBoxRef = useRef<HTMLTextAreaElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,10 +55,10 @@ function Page({ params: { name } }: { params: { name: string } }) {
         router.push("/login");
         return;
       }
-      if (isDesktop) {
-        router.push("/home");
-        return;
-      }
+      // if (isDesktop) {
+      //   router.push("/home");
+      //   return;
+      // }
       dispatch({ type: "SET_LOGIN", payload: true });
       const { data: userData } = await supabase
         .from("user")
@@ -203,21 +202,20 @@ function Page({ params: { name } }: { params: { name: string } }) {
   };
 
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
   }, [state.msg]);
 
   return (
-    <Container>
+    <Container noPadding bgGray>
       <ChatBoxPhone
         toast={toast}
         chatBoxRef={chatBoxRef}
         loading={loading}
         whoMsg={name}
         userRef={userRef}
-        chatContainerRef={chatContainerRef}
         name={name}
         send={send}
         state={state}

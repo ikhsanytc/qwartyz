@@ -18,10 +18,10 @@ import { socket } from "@/lib/socket";
 import { UserModel } from "@/types/model";
 import { Toast } from "../ui/use-toast";
 import styles from "./loader.module.css";
+import Link from "next/link";
 
 interface Props {
   name: string;
-  chatContainerRef: RefObject<HTMLDivElement>;
   state: State;
   send: (
     e: FormEvent<HTMLFormElement>,
@@ -38,7 +38,6 @@ interface Props {
 
 const ChatBoxPhone: FC<Props> = ({
   name,
-  chatContainerRef,
   state,
   toast,
   send,
@@ -68,50 +67,48 @@ const ChatBoxPhone: FC<Props> = ({
 
   return (
     <>
-      <div className="dark:bg-gray-800 bg-slate-100 w-full fixed top-0 z-50 inset-x-0 p-2 flex gap-2 items-center">
-        <ArrowLeft onClick={() => router.push("/home")} />
-        <div>
-          <h1 className="font-bold text-lg">{name}</h1>
-          {typing && <p className="text-sm text-green-500">typing...</p>}
+      <div className="fixed top-0 inset-x-0 dark:bg-gray-900 bg-slate-200 p-3">
+        <div className="flex gap-2 items-center">
+          <Link href="/home">
+            <ArrowLeft />
+          </Link>
+          <div>
+            <h1 className="font-bold text-lg">{name}</h1>
+            {typing && <p className="text-sm text-green-500">typing...</p>}
+          </div>
         </div>
       </div>
-      <div className="dark:bg-slate-400 bg-slate-200 w-full min-h-screen rounded-lg flex flex-col">
-        <div
-          ref={chatContainerRef}
-          className="p-2 flex gap-2 flex-col text-white overflow-auto max-h-screen scroll-smooth"
-        >
-          <div className="w-ful p-2 text-sm mb-5 mx-auto text-center text-yellow-500 dark:text-blue-500 rounded-lg bg-slate-600 break-words mt-10">
-            <p>
-              Your messages are end-to-end encrypted. no one can see the
-              contents of your chat, not even qwartyz can read or understand the
-              contents of your chat.
-            </p>
-          </div>
-          <div
-            className={`flex justify-center items-center transition-all duration-300 ${
-              loading ? "opacity-100 w-full h-full" : "opacity-0 h-0 w-0"
-            }`}
-          >
+      <div className="p-10"></div>
+      <div className="flex flex-col gap-4 px-4">
+        {loading ? (
+          <div className="flex justify-center items-center">
             <div className={styles.loader}></div>
           </div>
-          {state.msg.map((message, idx) => (
-            <Message
-              time={message.created_at}
-              id={message.id}
-              key={idx}
-              setReplyTo={setReplyTo}
-              name={message.sender}
-              posisi={
-                message.sender === state.user?.username ? "kamu" : "lawan"
-              }
-            >
-              {message.message}
-            </Message>
-          ))}
-          <div className={`p-5 ${replyTo ? "block" : "hidden"}`}></div>
-        </div>
+        ) : (
+          <>
+            <div className="w-full md:text-sm p-2 mb-5 mx-auto text-center text-yellow-500 dark:text-blue-500 rounded-lg bg-slate-600 break-words">
+              <p>
+                Your messages are end-to-end encrypted. no one can see the
+                contents of your chat, not even qwartyz can read or understand
+                the contents of your chat.
+              </p>
+            </div>
+            {state.msg.map((chat, idx) => (
+              <Message
+                key={idx}
+                time={chat.created_at}
+                id={chat.id}
+                setReplyTo={setReplyTo}
+                name={chat.sender}
+                posisi={chat.sender === state.user?.username ? "kamu" : "lawan"}
+              >
+                {chat.message}
+              </Message>
+            ))}
+          </>
+        )}
       </div>
-      <div className="dark:bg-gray-800 z-40 bg-slate-100 w-full p-3 fixed bottom-0 inset-x-0">
+      <div className="dark:bg-gray-900 z-40 bg-slate-200 w-full p-3 fixed bottom-0 inset-x-0">
         <form onSubmit={(e) => send(e, chatBoxRef, toast, state)}>
           <div className="flex gap-2 flex-col items-center">
             <div
