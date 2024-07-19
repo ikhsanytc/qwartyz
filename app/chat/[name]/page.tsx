@@ -55,10 +55,10 @@ function Page({ params: { name } }: { params: { name: string } }) {
         router.push("/login");
         return;
       }
-      // if (isDesktop) {
-      //   router.push("/home");
-      //   return;
-      // }
+      if (isDesktop) {
+        router.push("/home");
+        return;
+      }
       dispatch({ type: "SET_LOGIN", payload: true });
       const { data: userData } = await supabase
         .from("user")
