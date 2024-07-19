@@ -2,11 +2,12 @@ interface ChatModel {
     id: number;
     sender: string;
     target: string;
-    file: string;
-    fileTypes: string;
+    file: string | null;
+    fileTypes: string | null;
     message: string;
-    reply: number;
+    reply: number | null;
     created_at: string;
+    sending: boolean;
 }
 
 interface UserModel {
@@ -41,9 +42,12 @@ interface RequestFriendModel {
     created_at: string;
 }
 
+type ChatModelInput = Omit<ChatModel, 'id' | 'created_at' | 'sending'> & Partial<Pick<ChatModel, 'id' | 'created_at' | 'sending'>>
+
 export type {
     ChatModel,
     UserModel,
     ContactModel,
-    RequestFriendModel
+    RequestFriendModel,
+    ChatModelInput,
 }

@@ -1,4 +1,6 @@
+import { FormEvent, RefObject } from "react";
 import { ChatModel, ContactModel, UserModel } from "./model";
+import { Toast } from "@/components/ui/use-toast";
 
 interface LoginT {
     email: string;
@@ -27,10 +29,17 @@ type Action =
   | { type: "SET_USER"; payload: UserModel }
   | { type: "SET_LOGIN"; payload: boolean };
 
+type SendT = (
+    e: FormEvent<HTMLFormElement>,
+    chatBoxRef: RefObject<HTMLTextAreaElement>,
+    toast: ({ ...props }: Toast) => void,
+    state: State
+  ) => Promise<void>;
 
 export type {
     LoginT,
     RegisterT,
     State,
-    Action
+    Action,
+    SendT
 }

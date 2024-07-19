@@ -8,12 +8,8 @@ import {
   useState,
   useEffect,
   MutableRefObject,
-  Dispatch,
-  SetStateAction,
-  KeyboardEvent,
 } from "react";
-import { useRouter } from "next/navigation";
-import { State } from "@/types/main";
+import { SendT, State } from "@/types/main";
 import { socket } from "@/lib/socket";
 import { UserModel } from "@/types/model";
 import { Toast } from "../ui/use-toast";
@@ -23,12 +19,7 @@ import Link from "next/link";
 interface Props {
   name: string;
   state: State;
-  send: (
-    e: FormEvent<HTMLFormElement>,
-    chatBoxRef: RefObject<HTMLTextAreaElement>,
-    toast: ({ ...props }: Toast) => void,
-    state: State
-  ) => Promise<void>;
+  send: SendT;
   toast: ({ ...props }: Toast) => void;
   chatBoxRef: RefObject<HTMLTextAreaElement>;
   whoMsg: string;
@@ -51,7 +42,6 @@ const ChatBoxPhone: FC<Props> = ({
     sender: string;
   } | null>(null);
   const [typing, setTyping] = useState(false);
-  const router = useRouter();
   useEffect(() => {
     socket.on("typingFromServer", (sender, target) => {
       if (sender == whoMsg && target == userRef.current?.username) {
@@ -67,7 +57,7 @@ const ChatBoxPhone: FC<Props> = ({
 
   return (
     <>
-      <div className="fixed top-0 inset-x-0 dark:bg-gray-900 bg-slate-200 p-3">
+      <div className="fixed top-0 inset-x-0 z-50 dark:bg-gray-900 bg-slate-200 p-3">
         <div className="flex gap-2 items-center">
           <Link href="/home">
             <ArrowLeft />

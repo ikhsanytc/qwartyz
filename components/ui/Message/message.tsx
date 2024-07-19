@@ -86,7 +86,7 @@ const Message: FC<Props> = ({
                 posisi === "kamu"
                   ? "bg-slate-600 ml-auto"
                   : "bg-yellow-500 dark:bg-blue-500 mr-auto"
-              } cursor-pointer ${isMobile && "text-sm"}`}
+              } cursor-pointer ${isMobile && "text-sm select-none"}`}
               onDoubleClick={() =>
                 setReplyTo({
                   message: decryptMessage(children as string),

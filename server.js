@@ -2,7 +2,7 @@ const { createServer } = require("http");
 const next = require("next");
 const { Server } = require("socket.io");
 
-const dev = false;
+const dev = true;
 const hostname = "localhost";
 const port = 3000;
 // when using middleware `hostname` and `port` must be provided below

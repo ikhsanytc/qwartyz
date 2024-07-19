@@ -1,6 +1,6 @@
 "use client";
 
-import { State } from "@/types/main";
+import { State, SendT } from "@/types/main";
 import {
   FC,
   FormEvent,
@@ -19,12 +19,7 @@ import { UserModel } from "@/types/model";
 interface Props {
   state: State;
   chatContainerRef: RefObject<HTMLDivElement>;
-  send: (
-    e: FormEvent<HTMLFormElement>,
-    chatBoxRef: RefObject<HTMLTextAreaElement>,
-    toast: ({ ...props }: Toast) => void,
-    state: State
-  ) => Promise<void>;
+  send: SendT;
   toast: ({ ...props }: Toast) => void;
   chatBoxRef: RefObject<HTMLTextAreaElement>;
   whoMsgRef: MutableRefObject<string>;

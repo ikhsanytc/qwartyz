@@ -6,7 +6,7 @@ import Container from "@/components/container";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { checkLogin, send, supabase } from "@/lib/supabase";
-import { ChatModel, ContactModel, UserModel } from "@/types/model";
+import { ChatModel, UserModel } from "@/types/model";
 import { State, Action } from "@/types/main";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import ChatBoxPhone from "@/components/Chat/ChatBox";
@@ -204,7 +204,7 @@ function Page({ params: { name } }: { params: { name: string } }) {
   useEffect(() => {
     window.scrollTo({
       top: document.body.scrollHeight,
-      behavior: "smooth",
+      behavior: "instant",
     });
   }, [state.msg]);
 

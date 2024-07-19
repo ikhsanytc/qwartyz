@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useReducer, FormEvent } from "react";
+import { useEffect, useRef, useReducer } from "react";
 import { useRouter } from "next/navigation";
 import { isMobile } from "react-device-detect";
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
